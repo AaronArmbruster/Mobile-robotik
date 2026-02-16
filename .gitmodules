@@ -1,6 +1,6 @@
 [submodule "dynamixel_sdk"]
-	path = dynamixel_sdk
+	path = external/dynamixel_sdk
 	url = https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 [submodule "opencr"]
-	path = opencr
+	path = external/opencr
 	url = https://github.com/ROBOTIS-GIT/OpenCR.git
