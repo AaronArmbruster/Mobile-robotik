@@ -20,7 +20,7 @@ sudo make install
 **Wenn du das SDK auf deinem eigenen Rechner statt auf dem Turtlebot installieren möchtest, verwende das Build-Skript, das zur Architektur deines Systems passt (z.B. `linux64`)!**
 
 ### OpenCR
-Installiere die Firmware für das [OpenCR](https://emanual.robotis.com/docs/en/parts/controller/opencr10/), welche von diesem Framework benötigt wird, mithilfe der [Arduino CLI](https://docs.arduino.cc/arduino-cli/).
+Installiere die Firmware für das [OpenCR](https://emanual.robotis.com/docs/en/parts/controller/opencr10/), welche von diesem Framework benötigt wird, mithilfe des [Arduino CLI](https://docs.arduino.cc/arduino-cli/).
 
 Richte die OpenCR-Unterstützung ein und installiere die Abhängigkeiten
 ```
