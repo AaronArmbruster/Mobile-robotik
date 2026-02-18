@@ -24,7 +24,7 @@ Installiere die Firmware für das [OpenCR](https://emanual.robotis.com/docs/en/p
 
 Richte die OpenCR-Unterstützung ein und installiere die Abhängigkeiten
 ```
-arduino-cli config add board_manager.additional_urls "file://ABSOLUTE_PATH_TO_THIS_REPOSITORY/external/opencr/arduino/opencr_release/package_opencr_index.json"
+arduino-cli config add board_manager.additional_urls "file://$(pwd)/external/opencr/arduino/opencr_release/package_opencr_index.json"
 arduino-cli core install OpenCR:OpenCR
 ```
 
@@ -78,7 +78,7 @@ Install the [OpenCR](https://emanual.robotis.com/docs/en/parts/controller/opencr
 
 Set up and install the dependencies for the OpenCR board.
 ```
-arduino-cli config add board_manager.additional_urls "file://ABSOLUTE_PATH_TO_THIS_REPOSITORY/external/opencr/arduino/opencr_release/package_opencr_index.json"
+arduino-cli config add board_manager.additional_urls "file://$(pwd)/external/opencr/arduino/opencr_release/package_opencr_index.json"
 arduino-cli core install OpenCR:OpenCR
 ```
 
@@ -94,7 +94,7 @@ arduino-cli upload --fqbn OpenCR:OpenCR:OpenCR --build-path build --port /dev/tt
 
 ## Your code
 
-Build the your code
+Build your code
 ```
 mkdir build
 cd build/
