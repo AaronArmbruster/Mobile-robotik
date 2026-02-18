@@ -29,20 +29,20 @@ class DynamixelSDKWrapper
     ~DynamixelSDKWrapper();
 
     /**
-     * @brief Initialize the motors
+     * @brief Initializes the motors.
      * 
-     * @return true If the initialization was successful.
-     * @return false Otherwise
+     * @return true if the initialization was successful.
+     * @return false otherwise.
      */
     bool init();
 
     /**
-     * @brief Reads the position encoder value of a motor 
+     * @brief Reads the position encoder value of a motor.
      * 
      * @param dxl_id Motor id
-     * @return The position encoder value
+     * @return The position encoder value.
      */
-    int32_t readPosition(uint8_t dxl_id)
+    inline int32_t readPosition(uint8_t dxl_id)
     {
       int32_t data = 0;
       read(
@@ -55,12 +55,13 @@ class DynamixelSDKWrapper
     }
 
     /**
-     * @brief Sets the PWM value of a motor
+     * @brief Sets the PWM value of a motor.
+     *        The set value will stay the same until it is changed again.
      * 
      * @param dxl_id Motor id
      * @param pwm_value PWM value
-     * @return true If the PWM value was set successfully.
-     * @return false Otherwise
+     * @return true if the PWM value was set successfully.
+     * @return false otherwise.
      */
     inline bool writePWM(uint8_t dxl_id, int16_t pwm_value)
     {
