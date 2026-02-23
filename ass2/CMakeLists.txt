@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.20)
+project("assignment2" "CXX")
+
+# Task 1
+add_executable("${PROJECT_NAME}_task1" "src/task1.cpp")
+set_target_properties("${PROJECT_NAME}_task1" PROPERTIES OUTPUT_NAME "task1")
+target_compile_features("${PROJECT_NAME}_task1" PUBLIC "cxx_std_17")
+target_include_directories("${PROJECT_NAME}_task1" PRIVATE "${CMAKE_SOURCE_DIR}/turtlebot3/include/")
+target_link_directories("${PROJECT_NAME}_task1" PRIVATE "turtlebot3/")
+target_link_libraries("${PROJECT_NAME}_task1" PRIVATE "turtlebot3")
