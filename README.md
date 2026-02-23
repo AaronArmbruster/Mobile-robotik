@@ -71,7 +71,7 @@ cd external/dynamixel_sdk/c++/build/linux_sbc/
 sudo make install
 ```
 
-**If you want to install the SKD on your machine instead of the Turtlebot, use the build script that matches your machine's architecture (e.g., `linux64`)!**
+**If you want to install the SDK on your machine instead of the Turtlebot, use the build script that matches your machine's architecture (e.g., `linux64`)!**
 
 ### OpenCR
 Install the [OpenCR](https://emanual.robotis.com/docs/en/parts/controller/opencr10/)'s firmware, which is required by this framework, using the [Arduino CLI](https://docs.arduino.cc/arduino-cli/).
