@@ -19,7 +19,7 @@ bool drive(double v_l, double v_r) {
 
 
     int drive_time_seconds = 5;
-    int iteration_time_ms = 10;
+    int iteration_time_ms = 30;
 
       // 1. Zielwerte berechnen (m/s -> Ticks/s)
     double umfang = RAD_DURCHMESSER * PI;
@@ -65,7 +65,7 @@ bool drive(double v_l, double v_r) {
         int16_t pwm_l = (Kp * err_l_pwm) + (Ki * integral_l);
         int16_t pwm_r = (Kp * err_r_pwm) + (Ki * integral_r);
 
-        std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+        //std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
 
         std::chrono::duration<double> time = std::chrono::steady_clock::now() - start_time;
         dataFile << pwm_l << ";" << pwm_r << "\n";
@@ -74,14 +74,13 @@ bool drive(double v_l, double v_r) {
         if (pwm_l > MAX_PWM) pwm_l = MAX_PWM; else if (pwm_l < -MAX_PWM) pwm_l = -MAX_PWM;
         if (pwm_r > MAX_PWM) pwm_r = MAX_PWM; else if (pwm_r < -MAX_PWM) pwm_r = -MAX_PWM;
 
-        // std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+        std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
 
         // Schreiben
         dxl.syncWritePWM(pwm_l,pwm_r);
-
+        
         // Werte für nächsten Durchlauf speichern
-        last_pos_l = pos_l;
-        last_pos_r = pos_r;
+        dxl.syncReadPosition(&last_pos_l, &last_pos_r);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(iteration_time_ms));
     }
@@ -94,7 +93,7 @@ bool drive(double v_l, double v_r) {
 }
 
 int main() {
-    drive(0.15, 0.15); //max 0.206 m/s
+    drive(0.18, 0.18); //max 0.206 m/s
 
     return 0;
 }
