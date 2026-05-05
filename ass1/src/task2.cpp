@@ -16,12 +16,10 @@ bool drive(double v_l, double v_r) {
     
     if (!dxl.init())
       return false;
-    auto start_time = std::chrono::steady_clock::now();
 
-    int drive_time_seconds = 20;
+
+    int drive_time_seconds = 5;
     int iteration_time_ms = 10;
-    int iterations = (drive_time_seconds * 1000) / iteration_time_ms; // 20ms Loop-Zeit
-    std::cout << "Iterations: " << iterations << std::endl;
 
       // 1. Zielwerte berechnen (m/s -> Ticks/s)
     double umfang = RAD_DURCHMESSER * PI;
@@ -29,48 +27,48 @@ bool drive(double v_l, double v_r) {
     double target_r = (v_r / umfang) * TICKS_PER_REV;
 
     // 2. Initialisierung für den Regler
+
+    double Kp = 0.8;
+    double Ki = 14.28;
+    double integral_l = 0, integral_r = 0;
+    double dt = iteration_time_ms / 1000.0; 
+
+    std::ofstream dataFile("pwm_log.csv");
+    dataFile << "PWM_Wert_links;PWM_Wert_rechts" << std::endl;
+
     int32_t last_pos_l = dxl.readPosition(dxl.DXL_LEFT_ID);
     int32_t last_pos_r = dxl.readPosition(dxl.DXL_RIGHT_ID);
 
-    double Kp = 4;
-    double Ki = 0;
-    double integral_l = 0, integral_r = 0;
-    double dt = iteration_time_ms / 1000.0; // 20ms Loop-Zeit in Sekunden
+    int32_t pos_l =0;
+    int32_t pos_r =0;
 
-    std::ofstream dataFile("pwm_log.csv");
-    dataFile << "Iteration;PWM_Wert" << std::endl;
-
-    // 3. Fahr-Schleife (Beispiel: 5 Sekunden = 250 Iterationen)
-    //for (int i = 0; i < iterations; i++) {
+    // 3. Fahr-Schleife
+    auto start_time = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(drive_time_seconds)) {
         // Positionen lesen
-        int32_t pos_l = dxl.readPosition(dxl.DXL_LEFT_ID);
-        int32_t pos_r = dxl.readPosition(dxl.DXL_RIGHT_ID);
+        dxl.syncReadPosition(&pos_l, &pos_r);
 
         // Aktuelle Geschwindigkeit berechnen
         double vel_l = (pos_l - last_pos_l) / dt;
         double vel_r = (pos_r - last_pos_r) / dt;
 
-        // PI-Regler (kp=0.15, ki=0.05)
+        // PI-Regler
         double err_l = target_l - vel_l;
         double err_r = target_r - vel_r;
 
         double err_l_pwm = (err_l / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
         double err_r_pwm = (err_r / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
+     
+        integral_l += err_l_pwm * dt;
+        integral_r += err_r_pwm * dt;
 
-        integral_l += err_l * dt;
-        integral_r += err_r * dt;
-
-        double u_l = (Kp * err_l) + (Ki * integral_l);
-        double u_r = (Kp * err_r) + (Ki * integral_r);
-
-        double v_l_u = (u_l / TICKS_PER_REV) * umfang; // zurück in m/s
-        double v_r_u = (u_r / TICKS_PER_REV) * umfang;
-
-        int pwm_l = v_l_u / MAX_VELOCITY * MAX_PWM;
-        int pwm_r = v_r_u / MAX_VELOCITY * MAX_PWM;
+        int16_t pwm_l = (Kp * err_l_pwm) + (Ki * integral_l);
+        int16_t pwm_r = (Kp * err_r_pwm) + (Ki * integral_r);
 
         std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+
+        std::chrono::duration<double> time = std::chrono::steady_clock::now() - start_time;
+        dataFile << pwm_l << ";" << pwm_r << "\n";
 
         // Limitieren
         if (pwm_l > MAX_PWM) pwm_l = MAX_PWM; else if (pwm_l < -MAX_PWM) pwm_l = -MAX_PWM;
@@ -79,21 +77,24 @@ bool drive(double v_l, double v_r) {
         // std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
 
         // Schreiben
-        dxl.writePWM(dxl.DXL_LEFT_ID, pwm_l);
-        dxl.writePWM(dxl.DXL_RIGHT_ID, pwm_r);
+        dxl.syncWritePWM(pwm_l,pwm_r);
 
         // Werte für nächsten Durchlauf speichern
         last_pos_l = pos_l;
         last_pos_r = pos_r;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(iteration_time_ms));
     }
 
     // Am Ende Motoren aus
     dxl.syncWritePWM(0, 0);
+    dataFile.close();
+    std::cout << "Datei pwm_log.csv wurde erstellt." << std::endl;
     return true;
 }
 
 int main() {
-    drive(0.15, 0.15); // Vorwärts mit 0.2 m/s
+    drive(0.15, 0.15); //max 0.206 m/s
 
     return 0;
 }

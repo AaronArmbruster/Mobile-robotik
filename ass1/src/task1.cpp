@@ -7,12 +7,18 @@
 #define MAX_PWM 885
 #define MAX_VELOCITY 0.206 // in m/s
 
-bool drive(double v, double omega);
+bool drive(turtlebot3::DynamixelSDKWrapper *dxl, double v, double omega);
 
 // -----------------------------------------------------------------------------
 int main()
 {
-  drive(0.206, 0);
+  turtlebot3::DynamixelSDKWrapper dxl;
+  if (!dxl.init())
+    return -1;
+  
+  drive(&dxl, 0.206, 0);
+
+  std::this_thread::sleep_for(std::chrono::seconds(5));
   
   return 0;
 }
@@ -25,11 +31,8 @@ int main()
  * @return
  * @return false otherwise.
  * ************************************************************************/
-bool drive(double v, double omega)
+bool drive(turtlebot3::DynamixelSDKWrapper *dxl,double v, double omega)
 {
-  turtlebot3::DynamixelSDKWrapper dxl;
-  if (!dxl.init())
-    return false;
 
   double s_r = 0.9983;
   double s_l = 1;
@@ -54,7 +57,7 @@ bool drive(double v, double omega)
 
   std::cout << pwm_l << " " << pwm_r << std::endl;
 
-  dxl.syncWritePWM(pwm_l, pwm_r);
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  dxl->syncWritePWM(pwm_l, pwm_r);
+  
   return true;
 }
