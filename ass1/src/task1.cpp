@@ -13,8 +13,7 @@ bool drive(double v, double omega);
 int main()
 {
   drive(0.206, 0);
-
-  // TODO Implement task 1
+  
   return 0;
 }
 
@@ -32,15 +31,30 @@ bool drive(double v, double omega)
   if (!dxl.init())
     return false;
 
-  double v_r = (v + (omega * RAD_ABSTAND / 2));
-  double v_l = (v - (omega * RAD_ABSTAND / 2));
+  double s_r = 0.9983;
+  double s_l = 1;
+  
+  double v_r = (v + (omega * RAD_ABSTAND / 2)) * s_r;
+  double v_l = (v - (omega * RAD_ABSTAND / 2)) * s_l;
 
+  if (v_r > MAX_VELOCITY)
+  {
+    v_r = MAX_VELOCITY;
+    std::cout << "v_r is too high, set to max velocity" << std::endl;
+  }
+
+  if (v_l > MAX_VELOCITY)
+  {
+    v_l = MAX_VELOCITY;
+    std::cout << "v_l is too high, set to max velocity" << std::endl;
+  }
+    
   int pwm_r = v_r / MAX_VELOCITY * MAX_PWM;
   int pwm_l = v_l / MAX_VELOCITY * MAX_PWM;
 
-  std::cout << pwm_l << " " << pwm_r;
+  std::cout << pwm_l << " " << pwm_r << std::endl;
 
   dxl.syncWritePWM(pwm_l, pwm_r);
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  std::this_thread::sleep_for(std::chrono::seconds(10));
   return true;
 }
