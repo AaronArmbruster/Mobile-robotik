@@ -12,88 +12,96 @@
 #define PI 3.1415926535
 
 bool drive(double v_l, double v_r) {
-    turtlebot3::DynamixelSDKWrapper dxl;
-    
-    if (!dxl.init())
-      return false;
+  int16_t u_l_tick = 0, int16_t u_r_tick = 0;
+  int16_t y_l_tick = 0, int16_t y_r_tick = 0;
+  int16_t y_l_pwm = 0, int16_t y_r_pwm = 0;
+  double integral_l = 0, integral_r = 0;
 
+  turtlebot3::DynamixelSDKWrapper dxl;
 
-    int drive_time_seconds = 5;
-    int iteration_time_ms = 30;
+  if (!dxl.init())
+    return false;
 
-      // 1. Zielwerte berechnen (m/s -> Ticks/s)
-    double umfang = RAD_DURCHMESSER * PI;
-    double target_l = (v_l / umfang) * TICKS_PER_REV;
-    double target_r = (v_r / umfang) * TICKS_PER_REV;
+  int32_t pos_l = 0;int32_t pos_r = 0;
+  auto current_time = std::chrono::steady_clock::now();
 
-    // 2. Initialisierung für den Regler
+  int32_t last_pos_l = 0;
+  int32_t last_pos_r = 0;
+  auto last_time = std::chrono::steady_clock::now();
 
-    double Kp = 0.8;
-    double Ki = 14.28;
-    double integral_l = 0, integral_r = 0;
-    double dt = iteration_time_ms / 1000.0; 
+  std::chrono::duration<double> dt = current_time - last_time;
 
-    std::ofstream dataFile("pwm_log.csv");
-    dataFile << "PWM_Wert_links;PWM_Wert_rechts" << std::endl;
+  int drive_time_seconds = 5;
 
-    int32_t last_pos_l = dxl.readPosition(dxl.DXL_LEFT_ID);
-    int32_t last_pos_r = dxl.readPosition(dxl.DXL_RIGHT_ID);
+  // 1. Zielwerte berechnen (m/s -> Ticks/s)
+  double umfang = RAD_DURCHMESSER * PI;
+  double tick_target_l = (v_l / umfang) * TICKS_PER_REV;
+  double tick_target_r = (v_r / umfang) * TICKS_PER_REV;
 
-    int32_t pos_l =0;
-    int32_t pos_r =0;
+  // 2. Initialisierung für den Regler
 
-    // 3. Fahr-Schleife
-    auto start_time = std::chrono::steady_clock::now();
-    while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(drive_time_seconds)) {
-        // Positionen lesen
-        dxl.syncReadPosition(&pos_l, &pos_r);
+  double Kp = 0.8;
+  double Ki = 14.28;
+  
+  std::ofstream dataFile("pwm_log.csv");
+  dataFile << "PWM_Wert_links;PWM_Wert_rechts" << std::endl;
 
-        // Aktuelle Geschwindigkeit berechnen
-        double vel_l = (pos_l - last_pos_l) / dt;
-        double vel_r = (pos_r - last_pos_r) / dt;
+  dxl.syncReadPosition(&last_pos_l, &last_pos_r);
+  last_time = std::chrono::steady_clock::now();
 
-        // PI-Regler
-        double err_l = target_l - vel_l;
-        double err_r = target_r - vel_r;
+  // 3. Fahr-Schleife
+  auto start_time = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(drive_time_seconds)) {
+    // Positionen lesen
+    dxl.syncReadPosition(&pos_l, &pos_r);
+    current_time = std::chrono::steady_clock::now();
 
-        double err_l_pwm = (err_l / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
-        double err_r_pwm = (err_r / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
-     
-        integral_l += err_l_pwm * dt;
-        integral_r += err_r_pwm * dt;
+    dt = current_time - last_time;
 
-        int16_t pwm_l = (Kp * err_l_pwm) + (Ki * integral_l);
-        int16_t pwm_r = (Kp * err_r_pwm) + (Ki * integral_r);
+    // Aktuelle Geschwindigkeit berechnen
+    double tick_vel_l = (pos_l - last_pos_l) / dt;
+    double tick_vel_r = (pos_r - last_pos_r) / dt;
 
-        //std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+    // PI-Regler
+    double err_l_tick = tick_target_l - tick_vel_l;
+    double err_r_tick = tick_target_r - tick_vel_r;
 
-        std::chrono::duration<double> time = std::chrono::steady_clock::now() - start_time;
-        dataFile << pwm_l << ";" << pwm_r << "\n";
+    integral_l += err_l_tick * dt;
+    integral_r += err_r_tick * dt;
 
-        // Limitieren
-        if (pwm_l > MAX_PWM) pwm_l = MAX_PWM; else if (pwm_l < -MAX_PWM) pwm_l = -MAX_PWM;
-        if (pwm_r > MAX_PWM) pwm_r = MAX_PWM; else if (pwm_r < -MAX_PWM) pwm_r = -MAX_PWM;
+    u_l_tick = (Kp * err_l_tick) + (Ki * integral_l);
+    u_r_tick = (Kp * err_r_tick) + (Ki * integral_r);
 
-        std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+    double u_l_pwm = (u_l_tick / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
+    double u_r_pwm = (u_r_tick / TICKS_PER_REV * umfang)/MAX_VELOCITY * MAX_PWM;
 
-        // Schreiben
-        dxl.syncWritePWM(pwm_l,pwm_r);
+    //std::cout << u_l_pwm << " " << u_r_pwm << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+
+    dataFile << u_l_pwm << ";" << u_r_pwm << "\n";
+
+    // Limitieren
+    if (u_l_pwm > MAX_PWM) y_l_pwm = MAX_PWM; else if (u_l_pwm < -MAX_PWM) y_l_pwm = -MAX_PWM;
+    if (u_r_pwm > MAX_PWM) y_r_pwm = MAX_PWM; else if (u_r_pwm < -MAX_PWM) y_r_pwm = -MAX_PWM;
+
+    //std::cout << u_l_pwm << " " << u_r_pwm << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
+
+    // Schreiben
+    dxl.syncWritePWM(y_l_pwm,y_r_pwm);
         
-        // Werte für nächsten Durchlauf speichern
-        dxl.syncReadPosition(&last_pos_l, &last_pos_r);
+    // Werte für nächsten Durchlauf speichern
+    dxl.syncReadPosition(&last_pos_l, &last_pos_r);
+    last_time = std::chrono::steady_clock::now();
+  }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(iteration_time_ms));
-    }
-
-    // Am Ende Motoren aus
-    dxl.syncWritePWM(0, 0);
-    dataFile.close();
-    std::cout << "Datei pwm_log.csv wurde erstellt." << std::endl;
-    return true;
+  // Am Ende Motoren aus
+  dxl.syncWritePWM(0, 0);
+  dataFile.close();
+  std::cout << "Datei pwm_log.csv wurde erstellt." << std::endl;
+  return true;
 }
 
 int main() {
-    drive(0.18, 0.18); //max 0.206 m/s
+  drive(0.18, 0.18); //max 0.206 m/s
 
-    return 0;
+  return 0;
 }
