@@ -16,7 +16,7 @@ int main()
   if (!dxl.init())
     return -1;
   
-  drive(&dxl, 0.206, 0);
+  drive(&dxl, 0.0, -0.5);
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
   
@@ -34,7 +34,7 @@ int main()
 bool drive(turtlebot3::DynamixelSDKWrapper *dxl,double v, double omega)
 {
 
-  double s_r = 0.9983;
+  double s_r = 0.995;
   double s_l = 1;
   
   double v_r = (v + (omega * RAD_ABSTAND / 2)) * s_r;
