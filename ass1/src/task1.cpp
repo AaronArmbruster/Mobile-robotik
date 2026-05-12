@@ -15,11 +15,11 @@ int main()
   turtlebot3::DynamixelSDKWrapper dxl;
   if (!dxl.init())
     return -1;
-  
-  drive(&dxl, 0.0, -0.5);
+
+  drive(&dxl, 0.1, 0.2);
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  
+
   return 0;
 }
 
@@ -31,12 +31,12 @@ int main()
  * @return
  * @return false otherwise.
  * ************************************************************************/
-bool drive(turtlebot3::DynamixelSDKWrapper *dxl,double v, double omega)
+bool drive(turtlebot3::DynamixelSDKWrapper *dxl, double v, double omega)
 {
 
   double s_r = 0.995;
   double s_l = 1;
-  
+
   double v_r = (v + (omega * RAD_ABSTAND / 2)) * s_r;
   double v_l = (v - (omega * RAD_ABSTAND / 2)) * s_l;
 
@@ -51,13 +51,13 @@ bool drive(turtlebot3::DynamixelSDKWrapper *dxl,double v, double omega)
     v_l = MAX_VELOCITY;
     std::cout << "v_l is too high, set to max velocity" << std::endl;
   }
-    
+
   int pwm_r = v_r / MAX_VELOCITY * MAX_PWM;
   int pwm_l = v_l / MAX_VELOCITY * MAX_PWM;
 
   std::cout << pwm_l << " " << pwm_r << std::endl;
 
   dxl->syncWritePWM(pwm_l, pwm_r);
-  
+
   return true;
 }

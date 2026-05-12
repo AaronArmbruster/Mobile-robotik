@@ -21,10 +21,10 @@ bool drive(turtlebot3::DynamixelSDKWrapper *dxl, int drive_time_seconds, double 
   int16_t y_r_pwm = 0;
   double integral_l = 0, integral_r = 0;
 
-  //turtlebot3::DynamixelSDKWrapper dxl;
+  // turtlebot3::DynamixelSDKWrapper dxl;
 
-  //if (!dxl.init())
-  //  return false;
+  // if (!dxl.init())
+  //   return false;
 
   int32_t current_pos_l = 0;
   int32_t current_pos_r = 0;
@@ -47,8 +47,8 @@ bool drive(turtlebot3::DynamixelSDKWrapper *dxl, int drive_time_seconds, double 
   double Kp = 0.81;
   double Ki = 14.45;
 
-  //std::ofstream dataFile("pwm_log.csv");
-  //dataFile << "PWM_Wert_links;PWM_Wert_rechts" << std::endl;
+  // std::ofstream dataFile("pwm_log.csv");
+  // dataFile << "PWM_Wert_links;PWM_Wert_rechts" << std::endl;
 
   dxl->syncReadPosition(&last_pos_l, &last_pos_r);
   last_time = std::chrono::steady_clock::now();
@@ -91,9 +91,9 @@ bool drive(turtlebot3::DynamixelSDKWrapper *dxl, int drive_time_seconds, double 
     u_r_pwm = (u_r_tick / TICKS_PER_REV * umfang) / MAX_VELOCITY * MAX_PWM;
 
     // std::cout << pwm_l << " " << pwm_r << "|Error L: " << err_l_pwm << " Error R: " << err_r_pwm << std::endl;
-    //double a=((tick_vel_l / TICKS_PER_REV) * umfang);
-    //double b=((tick_vel_r / TICKS_PER_REV) * umfang);
-    //dataFile << a << ";" << b << "\n";
+    // double a=((tick_vel_l / TICKS_PER_REV) * umfang);
+    // double b=((tick_vel_r / TICKS_PER_REV) * umfang);
+    // dataFile << a << ";" << b << "\n";
 
     y_l_pwm = u_l_pwm;
     y_r_pwm = u_r_pwm;
@@ -123,8 +123,8 @@ bool drive(turtlebot3::DynamixelSDKWrapper *dxl, int drive_time_seconds, double 
 
   // Am Ende Motoren aus
   dxl->syncWritePWM(0, 0);
-  //dataFile.close();
-  //std::cout << "Datei pwm_log.csv wurde erstellt." << std::endl;
+  // dataFile.close();
+  // std::cout << "Datei pwm_log.csv wurde erstellt." << std::endl;
   return true;
 }
 
@@ -133,12 +133,12 @@ int main()
   turtlebot3::DynamixelSDKWrapper dxl;
   if (!dxl.init())
     return -1;
-  
+
   int drive_time_seconds = 5;
-  
-  drive(&dxl, drive_time_seconds, 0.1, 0.1); // max 0.206 m/s
-  //drive(&dxl, drive_time_seconds, 0, 0);
-  //drive(&dxl, drive_time_seconds, 0.05, 0.05); // max 0.206 m/s
+
+  drive(&dxl, drive_time_seconds, 0.15, 0.15); // max 0.206 m/s
+  // drive(&dxl, drive_time_seconds, 0, 0);
+  // drive(&dxl, drive_time_seconds, 0.05, 0.05); // max 0.206 m/s
 
   return 0;
 }
