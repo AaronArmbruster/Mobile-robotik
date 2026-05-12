@@ -46,7 +46,7 @@ void input_thread_fun()
         target_omega = w;
         // drive_time_seconds = drive_time;
         // if (drive_time < 0)
-        continue; // Ungültige Eingabe, ignoriere
+        //   continue; // Ungültige Eingabe, ignoriere
         // drive_start_time = std::chrono::steady_clock::now();
       }
     }
@@ -82,10 +82,11 @@ void drive()
     //   target_omega = 0;
     // }
 
-    // 1. Aktuelle Zielgeschwindigkeiten aus den atomaren Variablen holen
+    // Aktuelle Zielgeschwindigkeiten aus globalen Variablen
     double v = target_v;
     double omega = target_omega;
 
+    // Inverse Kinematik
     v_r = (v + (omega * RAD_ABSTAND / 2.0));
     v_l = (v - (omega * RAD_ABSTAND / 2.0));
 
@@ -110,17 +111,18 @@ void drive()
       v_l = -MAX_VELOCITY;
     }
 
+    // Zielwerte in Ticks/s umrechnen
     double tick_target_l = (v_l / umfang) * TICKS_PER_REV;
     double tick_target_r = (v_r / umfang) * TICKS_PER_REV;
 
-    // 2. Sensorik & Zeit
+    // Positionen & Zeit lesen
     dxl.syncReadPosition(&current_pos_l, &current_pos_r);
     auto current_time = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> duration = current_time - last_time;
     double dt = duration.count();
 
-    // 3. PI-Regler Logik
+    // Aktuelle Geschwindigkeit in Ticks/s berechnen
     double tick_vel_l = (current_pos_l - last_pos_l) / dt;
     double tick_vel_r = (current_pos_r - last_pos_r) / dt;
 
