@@ -98,8 +98,9 @@ void LDS03Wrapper::readLiDARThread()
     LDS03HeaderRaw header_raw = { 0 };
     readBytes(reinterpret_cast<uint8_t *>(&header_raw), sizeof(header_raw));
 
-    if (header_raw.flags.ring_start) {
-      if (is_full_packet)
+    if (header_raw.flags.ring_start)
+    {
+      if (is_full_packet && header_raw.flags.scan_frequency > 90U)
         callback_(packet);
 
       is_full_packet = true;
