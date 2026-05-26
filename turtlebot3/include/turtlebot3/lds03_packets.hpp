@@ -17,7 +17,7 @@ struct __attribute__((packed)) LDS03FlagsRaw
 // -----------------------------------------------------------------------------
 struct __attribute__((packed)) LDS03HeaderRaw
 {
-  LDS03FlagsRaw fags;
+  LDS03FlagsRaw flags;
   uint8_t size;
   uint16_t angle_start;
   uint16_t angle_end;

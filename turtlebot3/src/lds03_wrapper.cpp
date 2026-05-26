@@ -70,11 +70,16 @@ bool LDS03Wrapper::init(const char *port_name)
 // -----------------------------------------------------------------------------
 void LDS03Wrapper::readLiDARThread()
 {
+  LDS03Packet packet = { 0 };
+  LDS03Header &ph = packet.header;
+  std::vector<LDS03Data> &pd = packet.data;
+
+  bool is_full_packet = false;
+
   while(read_lidar_)
   {
-    uint8_t timeout = 0U;
-
-    while (++timeout)
+    // Search for magic number of header
+    while (true)
     {
       uint8_t header[2] = { 0 };
       readBytes(header, 1);
@@ -90,40 +95,38 @@ void LDS03Wrapper::readLiDARThread()
       break;
     }
 
-    if (timeout)
-    {
-      LDS03HeaderRaw header_raw = { 0 };
-      readBytes(reinterpret_cast<uint8_t *>(&header_raw), sizeof(header_raw));
+    LDS03HeaderRaw header_raw = { 0 };
+    readBytes(reinterpret_cast<uint8_t *>(&header_raw), sizeof(header_raw));
 
-      if (header_raw.fags.ring_start)
-        continue;
+    if (header_raw.flags.ring_start) {
+      if (is_full_packet)
+        callback_(packet);
 
-      LDS03DataRaw data_raw[header_raw.size] = { 0 };
-      readBytes(
-        reinterpret_cast<uint8_t *>(data_raw),
-        sizeof(LDS03DataRaw) * header_raw.size
-      );
-
-      LDS03Packet packet = { 0 };
-      LDS03Header &header = packet.header;
-      header.angle_start =  M_PI_4 * header_raw.angle_start / 5760.0;
-      header.angle_end = M_PI_4 * header_raw.angle_end / 5760.0;
-      header.angle_increment
-        = ((header.angle_end > header.angle_start ? 0.0 : 2.0 * M_PI)
-          + header.angle_end - header.angle_start) / (header_raw.size - 1);
-
-      packet.data.reserve(header_raw.size);
-
-      for (LDS03DataRaw d : data_raw)
-      {
-        LDS03Data data;
-        data.distance = d.distance / 1000.0;
-        data.intensity = d.intensity / 255.0;
-        packet.data.push_back(data);
-      }
-
-      callback_(packet);
+      is_full_packet = true;
+      pd.clear();
+      ph.angle_start = header_raw.angle_start * M_PI_4 / 5760.0;
     }
+
+    LDS03DataRaw data_raw[header_raw.size] = { 0 };
+    readBytes(
+      reinterpret_cast<uint8_t *>(data_raw),
+      sizeof(LDS03DataRaw) * header_raw.size
+    );
+
+    pd.reserve(header_raw.size);
+
+    for (LDS03DataRaw d : data_raw)
+    {
+      LDS03Data data;
+      data.distance = d.distance / 1000.0;
+      data.intensity = d.intensity / 255.0;
+      pd.push_back(data);
+    }
+
+    ph.angle_end = header_raw.angle_end * M_PI_4 / 5760.0;
+    ph.angle_increment
+      = ((ph.angle_end > ph.angle_start ? 0.0 : 2.0 * M_PI)
+        + ph.angle_end - ph.angle_start) / (pd.size() - 1);
   }
 }
 
