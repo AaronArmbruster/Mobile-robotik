@@ -4,6 +4,6 @@
 // -----------------------------------------------------------------------------
 int main()
 {
-  // TODO Implement taks 1
+  // TODO Implement task 1
   return 0;
 }
