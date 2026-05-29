@@ -9,15 +9,25 @@
 namespace tb3_util
 {
 
+typedef std::vector<size_t> Object;
+typedef std::vector<Object> Objects;
+
 /** ****************************************************************************
  * @brief Detects objects in the given LDS03Packet.
  *
  * @param packet The LDS03Packet
- * @return A vector containing a vector of the indices of the detected objects.
+ * @return The detected objects.
  * ****************************************************************************/
-std::vector<std::vector<size_t>> detectObjects(
-  const turtlebot3::LDS03Packet &packet
-);
+Objects detectObjects(const turtlebot3::LDS03Packet &packet);
+
+/** ****************************************************************************
+ * @brief Checks whether a suitable goal object is among the given objects.
+ *
+ * @param packet The LDS03 Packet
+ * @param objects The detected objects
+ * @return The goal object, if one was found. Otherwise an empty Object
+ * ****************************************************************************/
+Object getGoal(const turtlebot3::LDS03Packet &packet, const Objects &objects);
 
 } /* namespace tb3_util */
 
