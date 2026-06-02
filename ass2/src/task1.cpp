@@ -30,7 +30,7 @@ std::atomic<bool> odometry_running(false);
 void drive_with_time(double v, double omega, int drive_time_seconds);
 void drive_wasd();
 
-// Hilfsfunktion: Setzt das Terminal in den "Raw-Modus", um einzelne Tasten ohne Enter zu lesen
+// Setzt das Terminal in den "Raw-Modus" um eingabe sofort zulesen
 void set_terminal_raw(bool enable)
 {
   static struct termios oldt, newt;
@@ -47,7 +47,7 @@ void set_terminal_raw(bool enable)
   }
 }
 
-// Hilfsfunktion: Prüft, ob eine Taste im Puffer liegt (Non-blocking check)
+// Prüft, ob eine Taste im Puffer liegt
 bool kbhit()
 {
   struct timeval tv = {0L, 0L};
@@ -164,6 +164,8 @@ void odometry()
   double current_theta = 0, last_theta = 0;
   double current_x = 0, current_y = 0;
   double last_x = 0, last_y = 0;
+  double delta_s_l = 0, delta_s_r = 0;
+  double tick_diff_l = 0, tick_diff_r = 0;
 
   double umfang = RAD_DURCHMESSER * PI;
 
@@ -179,11 +181,11 @@ void odometry()
       dxl.syncReadPosition(&current_pos_l, &current_pos_r);
     }
 
-    double tick_diff_l = (current_pos_l - last_pos_l);
-    double tick_diff_r = (current_pos_r - last_pos_r);
+    tick_diff_l = (current_pos_l - last_pos_l);
+    tick_diff_r = (current_pos_r - last_pos_r);
 
-    double delta_s_l = tick_diff_l / TICKS_PER_REV * umfang;
-    double delta_s_r = tick_diff_r / TICKS_PER_REV * umfang;
+    delta_s_l = tick_diff_l / TICKS_PER_REV * umfang;
+    delta_s_r = tick_diff_r / TICKS_PER_REV * umfang;
 
     delta_s = (delta_s_l + delta_s_r) / 2.0;
     delta_theta = (delta_s_r - delta_s_l) / RAD_ABSTAND;
@@ -202,6 +204,7 @@ void odometry()
     last_theta = current_theta;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+  // Koordinate der vorderen Kante
   current_x = current_x - 0.031 * sin(current_theta);
   current_y = current_y + 0.031 * cos(current_theta);
   std::cout << "Odometry - X: " << current_x << " m, Y: " << current_y << " m, Theta: " << current_theta << " rad" << std::endl;
@@ -488,16 +491,7 @@ int main()
     return -1;
   }
 
-  // Eingabe-Thread starten
   input_thread_fun();
-
-  // Odometry-Thread starten
-
-  // Hauptthread übernimmt die Regelung
-
-  // Warten bis Eingabe-Thread sauber beendet wurde
-
-  // Warten bis Odometry-Thread sauber beendet wurde
 
   std::cout << "Programm beendet." << std::endl;
   return 0;
