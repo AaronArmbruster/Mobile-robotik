@@ -3,4 +3,5 @@ project("mobile_robotik" "CXX")
 
 add_subdirectory("ass1/")
 add_subdirectory("ass2/")
+add_subdirectory("ass3/")
 add_subdirectory("turtlebot3/")
